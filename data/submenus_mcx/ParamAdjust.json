@@ -5,7 +5,7 @@
     {"name": "closeSize",  "type": "param", "param": {"kind": "uint", "key": "closeSize", "min": 0, "max": 255}},
     {"name": "Dist",       "type": "param", "param": {"kind": "uint", "key": "closeTrackDist", "min": 0, "max": 255}},
     {"name": "brightness", "type": "param", "param": {"kind": "int",  "key": "ZAP_SCC8660_BRIGHT_DEF"}},
-    {"name": "SDSave",     "type": "param", "param": {"kind": "uint", "key": "SDSwitch", "min": 0, "max": 1}},
-    {"name": "ShowImg",    "type": "param", "param": {"kind": "uint", "key": "ShowImgSwitch", "min": 0, "max": 1}}
+    {"name": "SDSave",     "type": "param", "param": {"kind": "bool", "key": "SDSwitch"}},
+    {"name": "ShowImg",    "type": "param", "param": {"kind": "bool", "key": "ShowImgSwitch"}}
   ]
 }

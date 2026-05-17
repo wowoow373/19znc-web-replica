@@ -153,7 +153,11 @@ function onKeyAdjust(state, key, sw, spec, ctx) {
     case 'R':
     case 'Enter': {
       ctx.saveParams();
-      flash(state, 'success', 500);
+      // Firmware draws "success" at (0, cursor_row) with Table_Name_Length
+      // width, white-on-red. We record the cursor row so renderMenu paints it
+      // exactly there for 500ms.
+      const f = top(state);
+      flash(state, 'success', 500, f.cursor + 1);
       state.mode = 'menu';
       state.adjust = null;
       return;
@@ -192,6 +196,15 @@ function adjustParam(item, sign, step, ctx) {
     ctx.setParam(key, v);
     return;
   }
+  if (p.kind === 'bool') {
+    // U or D toggles regardless of step. Mirrors what the user expects from a
+    // 0/1 flag — firmware also treats these as a single SW-aware step but
+    // here we collapse SW so the value isn't accidentally rounded to 0 when
+    // SW1=SW2=0 (step=0.1).
+    const v = ctx.getParam(key) ? 0 : 1;
+    ctx.setParam(key, v);
+    return;
+  }
   let v = ctx.getParam(key);
   v = v + sign * step;
   if (p.kind === 'int' || p.kind === 'uint') v = Math.round(v);
@@ -201,13 +214,19 @@ function adjustParam(item, sign, step, ctx) {
   ctx.setParam(key, v);
 }
 
-function flash(state, text, ms) {
-  state.flash = { text, untilTs: Date.now() + ms };
+function flash(state, text, ms, row) {
+  state.flash = { text, untilTs: Date.now() + ms, row };
 }
 
-// Call once per frame to expire flash messages.
+// Call once per frame to expire flash messages. Returns true if the flash
+// just expired (so the caller can mark the menu dirty and redraw without the
+// success overlay).
 export function tick(state) {
-  if (state.flash && Date.now() >= state.flash.untilTs) state.flash = null;
+  if (state.flash && Date.now() >= state.flash.untilTs) {
+    state.flash = null;
+    return true;
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +237,7 @@ export function render(screen, state, spec, ctx) {
   if (state.mode === 'runtime') {
     // Delegate to runtime_screens
     ctx.renderRuntime?.(screen, state.runtime);
-    if (state.flash) drawFlash(screen, spec, state.flash.text);
+    if (state.flash) drawFlash(screen, spec, state.flash);
     return;
   }
   renderMenu(screen, state, spec, ctx);
@@ -260,16 +279,17 @@ function renderMenu(screen, state, spec, ctx) {
       screen.textRow(paramCol, row, spec.enumNameLen, '', COLORS.BLUE, COLORS.WHITE);
     }
   }
-  if (state.flash) drawFlash(screen, spec, state.flash.text);
+  if (state.flash) drawFlash(screen, spec, state.flash);
 }
 
-function drawFlash(screen, spec, text) {
-  // Overlay the text on the cursor row's param column to mirror the firmware:
+function drawFlash(screen, spec, flashObj) {
+  // Mirror firmware Menu_AdjustParam line 1551:
   //   menu_show_string("success", Table_Name_Length, 0, site.row, Color, bkColor)
-  // For simplicity we draw it at row = floor(dispNum/2) centered.
-  const row = Math.floor(spec.dispNum / 2) + 1;
-  const padded = padOrCrop(text, spec.cols);
-  screen.textRow(0, row, spec.cols, padded, COLORS.WHITE, COLORS.RED);
+  // i.e. white-on-red over the name column of the cursor row, leaving the
+  // param value visible to its right.
+  const row = (flashObj.row !== undefined) ? flashObj.row : Math.floor(spec.dispNum / 2) + 1;
+  const text = padOrCrop(flashObj.text, spec.nameLen);
+  screen.textRow(0, row, spec.nameLen, text, COLORS.WHITE, COLORS.RED);
 }
 
 function formatParamValue(param, ctx) {
@@ -305,27 +325,34 @@ function padOrCrop(s, width) {
   return s + ' '.repeat(width - s.length);
 }
 
-// Helper for menu data: produce the sub-menu title decoration. Spec exposes
-// titleSubFmt so we keep the formatting in one place per device.
-export function makeSubTitleFmt(totalCols) {
-  // " -=  <name>  =- "  centered. Pads with spaces on both sides.
-  return (name) => {
-    const max = totalCols;
-    const decoLen = 8; // " -=  " + "  =- " == 5+5=10? Let's compute precisely:
-    // " -=  ".length = 5, "  =- ".length = 5 → decoLen=10
-    const left = ' -=  ';
-    const right = '  =- ';
-    const innerWidth = max - left.length - right.length;
-    const namePadded = padCenter(name, innerWidth);
-    return left + namePadded + right;
-  };
+// Helper for menu data: produce the title decoration the way the C
+// SubNameCat() in menu.c does it. The firmware initializes a buffer of
+// (maxCol+1) bytes from the origin_MenuName string — which is only 20 visible
+// chars long — and the remaining bytes are '\0' from C zero-extension. The
+// name is then memcpy'd into the centre, but a strlen-style render stops at
+// the first '\0'. So for MCX (maxCol=40), titles only ever fill the first
+// 20-25 cols of row 0; the right half stays the bg colour.
+//
+// We reproduce that behaviour exactly so the on-screen titles match what the
+// real boards display.
+export function subNameCat(name, originDeco, maxCol) {
+  const buf = new Array(maxCol + 1).fill('\0');
+  for (let i = 0; i < Math.min(originDeco.length, maxCol); i++) buf[i] = originDeco[i];
+  const offsetF = ((maxCol - 6) - name.length) / 2.0;
+  if (offsetF < 0) {
+    for (let i = 3; i < maxCol - 3 && i - 3 < name.length; i++) buf[i] = name[i - 3];
+  } else {
+    const temp = 3 + Math.floor(offsetF);
+    for (let i = temp; i < buf.length && (i - temp) < name.length; i++) {
+      buf[i] = name[i - temp];
+    }
+  }
+  let end = buf.indexOf('\0');
+  if (end === -1) end = buf.length;
+  return buf.slice(0, end).join('');
 }
 
-function padCenter(s, w) {
-  s = String(s ?? '');
-  if (s.length >= w) return s.slice(0, w);
-  const total = w - s.length;
-  const l = Math.floor(total / 2);
-  const r = total - l;
-  return ' '.repeat(l) + s + ' '.repeat(r);
+// Returns a (name) => string sub-title formatter for a given controller spec.
+export function makeSubTitleFmt(maxCol, originDeco) {
+  return (name) => subNameCat(name, originDeco, maxCol);
 }

@@ -34,15 +34,6 @@ export function initOpenart(screen) {
   onOpenartCmd(({ cmd, label }) => {
     handleCmd(screen, cmd, label);
   });
-
-  // Manual CMD selector
-  const sel = document.querySelector('[data-openart-cmd]');
-  if (sel) {
-    sel.addEventListener('change', () => {
-      const cmd = parseInt(sel.value, 16);
-      handleCmd(screen, cmd);
-    });
-  }
 }
 
 function handleCmd(screen, cmd, overrideLabel) {

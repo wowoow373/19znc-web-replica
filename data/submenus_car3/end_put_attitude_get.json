@@ -2,9 +2,9 @@
   "title": "put_end_attitude_get",
   "items": [
     {"name": "save",    "type": "function", "fn": "save_endputattitude"},
-    {"name": "l_or_r1", "type": "param", "param": {"kind": "uint", "key": "end_left_or_right[0]", "min": 0, "max": 1}},
-    {"name": "l_or_r2", "type": "param", "param": {"kind": "uint", "key": "end_left_or_right[1]", "min": 0, "max": 1}},
-    {"name": "l_or_r3", "type": "param", "param": {"kind": "uint", "key": "end_left_or_right[2]", "min": 0, "max": 1}},
+    {"name": "l_or_r1", "type": "param", "param": {"kind": "bool", "key": "end_left_or_right[0]"}},
+    {"name": "l_or_r2", "type": "param", "param": {"kind": "bool", "key": "end_left_or_right[1]"}},
+    {"name": "l_or_r3", "type": "param", "param": {"kind": "bool", "key": "end_left_or_right[2]"}},
     {"name": "x",       "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.x"}},
     {"name": "y",       "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.y"}},
     {"name": "yaw",     "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.yaw"}},

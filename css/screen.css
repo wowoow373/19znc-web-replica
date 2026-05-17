@@ -23,6 +23,12 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
   gap: 12px;
 }
 
+/* MCX / OpenArt panels — read-only, no controls beyond a status line. */
+.panel.slim {
+  padding: 12px 14px;
+  gap: 8px;
+}
+
 /* 3x3 dpad: U top center, L center-left, Enter center, R center-right, D bottom center */
 .dpad {
   display: grid;
@@ -99,6 +105,17 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
   padding: 4px 6px;
   font-size: 13px;
 }
+
+/* KCA status (read-only pill + hint, replaces the old .kca select control) */
+.kca-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.kca-status > span:first-child { color: #b8b8c0; }
+
 .hint {
   color: #6a6a75;
   font-size: 12px;

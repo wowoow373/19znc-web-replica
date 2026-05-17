@@ -3,9 +3,9 @@
   "items": [
     {"name": "locate_mode",       "type": "param",    "param": {"kind": "enum", "key": "locate_mode_input", "enum": "locate_mode"}},
     {"name": "track2",            "type": "function", "fn": "track2"},
-    {"name": "isGlobal",          "type": "param",    "param": {"kind": "uint", "key": "a_c_Global_motion", "min": 0, "max": 1}},
-    {"name": "isServoSafeMode",   "type": "param",    "param": {"kind": "uint", "key": "ServoSaftyMode", "min": 0, "max": 1}},
-    {"name": "isRampDisable",     "type": "param",    "param": {"kind": "uint", "key": "ramp_oc_disable_flag", "min": 0, "max": 1}},
+    {"name": "isGlobal",          "type": "param",    "param": {"kind": "bool", "key": "a_c_Global_motion"}},
+    {"name": "isServoSafeMode",   "type": "param",    "param": {"kind": "bool", "key": "ServoSaftyMode"}},
+    {"name": "isRampDisable",     "type": "param",    "param": {"kind": "bool", "key": "ramp_oc_disable_flag"}},
     {"name": "show_fps",          "type": "function", "fn": "show_fps_loop"},
     {"name": "KEY_CHANGE",        "type": "param",    "param": {"kind": "enum", "key": "KCA", "enum": "key_control"}},
     {"name": "LR_change",         "type": "submenu",  "submenu": "a_c_LR_info_para"},

@@ -1,25 +1,39 @@
-// Virtual button dispatcher. Translates HTML button clicks into menu key
-// events for each screen, and tracks SW1/SW2 + (car3 only) KCA routing.
+// Virtual button dispatcher. Translates HTML button events into menu key
+// events for the single physical d-pad (car3.0 only — MCX and OpenArt have
+// no buttons in the real hardware; MCX receives keys forwarded over UART).
 //
-// When car3's KCA is set to "deviation", the firmware diverts subsequent key
-// presses to MCX over UART; we mirror that by emitting a key_forward event
-// onto the bus instead of invoking the local key handler.
+// car3.0's KCA routes its key presses:
+//   locality  — keys drive car3.0 itself
+//   deviation — keys are forwarded to MCX over the bus (emitKeyForward)
+//   detection — keys are forwarded to MCX (firmware also CCs OpenArt; replica
+//               only forwards to MCX for now)
+//
+// KCA is owned by the menu (the firmware's KEY_CHANGE parm_change item). We
+// don't have a separate UI control for it — keys.js asks app.js for the
+// current value via a getter set at startup.
 
 import { emitKeyForward } from './uart_bus.js';
 
 const screenState = {
-  car3:    { sw1: false, sw2: false, kca: 'locality', handler: null },
-  mcx:     { sw1: false, sw2: false,                  handler: null },
-  openart: {                                          handler: null },
+  car3:    { sw1: false, sw2: false, handler: null },
+  mcx:     {                          handler: null },
+  openart: {                          handler: null },
 };
+
+// car3.0 KCA — externally provided so it stays in sync with the menu store.
+let getKcaName = () => 'locality';
+export function setKcaGetter(fn) { getKcaName = fn; }
+
+// Long-press handler — fires after a held Enter on car3.0. The firmware uses
+// this as a safety: while remote-controlling MCX, holding Enter pulls keys
+// back to car3.0 (effectively KCA = locality).
+let longPressEnterHandler = null;
+export function setLongPressEnterHandler(fn) { longPressEnterHandler = fn; }
+const LONG_PRESS_MS = 500;
 
 export function getSw(screenId) {
   const s = screenState[screenId];
   return { sw1: !!s.sw1, sw2: !!s.sw2 };
-}
-
-export function getKca(screenId = 'car3') {
-  return screenState[screenId]?.kca || 'locality';
 }
 
 export function onKey(screenId, handler) {
@@ -27,16 +41,19 @@ export function onKey(screenId, handler) {
 }
 
 export function bindButtons({ onSkip, onReset }) {
-  // d-pad buttons
+  // Standard d-pad buttons (everything except Enter on car3, which gets
+  // long-press semantics below).
   document.querySelectorAll('.dp[data-key]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const screen = btn.dataset.screen;
-      const key = btn.dataset.key;
-      dispatch(screen, key);
-    });
+    const screen = btn.dataset.screen;
+    const key = btn.dataset.key;
+    if (screen === 'car3' && key === 'Enter') {
+      bindCar3EnterButton(btn);
+    } else {
+      btn.addEventListener('click', () => dispatch(screen, key));
+    }
   });
 
-  // SW1/SW2 toggles
+  // SW1/SW2 toggles (car3 only — those are the physical hardware switches)
   document.querySelectorAll('input[type=checkbox][data-sw]').forEach((cb) => {
     cb.addEventListener('change', () => {
       const [screen, swName] = cb.dataset.sw.split('-');
@@ -46,29 +63,9 @@ export function bindButtons({ onSkip, onReset }) {
     });
   });
 
-  // KCA select (car3 only)
-  document.querySelectorAll('select[data-kca]').forEach((sel) => {
-    sel.addEventListener('change', () => {
-      const screen = sel.dataset.kca;
-      screenState[screen].kca = sel.value;
-      const hint = document.getElementById('mcx-link-hint');
-      if (hint) {
-        if (sel.value === 'deviation') {
-          hint.textContent = `▶ car3.0 按键已转发到 MCX (KCA=${sel.value})`;
-          hint.style.color = '#6080ff';
-        } else {
-          hint.textContent = `等待 car3.0 转发的按键…  (当前 KCA=${sel.value}，未转发)`;
-          hint.style.color = '#6a6a75';
-        }
-      }
-    });
-    // Sync initial state
-    sel.dispatchEvent(new Event('change'));
-  });
-
   // Skip-boot
   document.querySelectorAll('button.skip[data-skip]').forEach((btn) => {
-    btn.addEventListener('click', () => onSkip(btn.dataset.skip));
+    btn.addEventListener('click', () => onSkip?.(btn.dataset.skip));
   });
 
   // RESET (car3 only — its MCU is the master, hitting reset reboots all 3)
@@ -76,13 +73,10 @@ export function bindButtons({ onSkip, onReset }) {
     btn.addEventListener('click', () => onReset?.(btn.dataset.reset));
   });
 
-  // Init step readouts
+  // Init step readouts (only the screens that actually have SW UI)
   updateStepReadout('car3');
-  updateStepReadout('mcx');
 
-  // Keyboard fallback: arrow keys + Enter target whichever screen owns focus.
-  // For simplicity, route to car3 by default; users can click into the panel
-  // to focus a different screen if needed (future improvement).
+  // Keyboard fallback: arrows + Enter target car3 by default.
   window.addEventListener('keydown', (e) => {
     const target = document.activeElement;
     const screen = target?.closest?.('.screen')?.dataset?.screen || 'car3';
@@ -93,9 +87,41 @@ export function bindButtons({ onSkip, onReset }) {
   });
 }
 
+// Wire mousedown/mouseup so a held Enter triggers the long-press handler
+// (KCA → locality) instead of the normal click. A short press still
+// dispatches Enter as usual.
+function bindCar3EnterButton(btn) {
+  let timer = null;
+
+  const start = (e) => {
+    e.preventDefault?.();
+    timer = setTimeout(() => {
+      timer = null;
+      longPressEnterHandler?.();
+    }, LONG_PRESS_MS);
+  };
+  const finish = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+      // Short press → normal click semantics
+      dispatch('car3', 'Enter');
+    }
+    // Long press already fired and self-cleared the timer; nothing to do.
+  };
+  const cancel = () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+  };
+
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup',   finish);
+  btn.addEventListener('pointerleave', cancel);
+  btn.addEventListener('pointercancel', cancel);
+}
+
 function dispatch(screen, key) {
-  // car3 KCA routing: deviation/detection → forward to MCX
-  if (screen === 'car3' && screenState.car3.kca !== 'locality') {
+  // car3 KCA routing: any non-locality value forwards to MCX
+  if (screen === 'car3' && getKcaName() !== 'locality') {
     emitKeyForward({
       key,
       sw1: !!screenState.car3.sw1,
@@ -139,6 +165,7 @@ function updateStepReadout(screen) {
 }
 
 // Inject a key from the bus (used by MCX when KCA-forwarded keys arrive).
+// The forwarded message carries car3's SW state so MCX uses the same step.
 export function injectKey(screen, key, { sw1, sw2 }) {
   const h = screenState[screen]?.handler;
   if (h) h(key, { sw1, sw2 });

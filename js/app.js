@@ -11,14 +11,14 @@ import { loadFont, COLORS } from './font.js';
 import { Screen } from './screen.js';
 import * as State from './state.js';
 import {
-  bindButtons, onKey, injectKey,
+  bindButtons, onKey, injectKey, setKcaGetter, setLongPressEnterHandler,
 } from './keys.js';
 import {
   makeBootCtx, bootCar3, bootMcx, bootOpenart,
 } from './boot.js';
 import {
   createMenuState, onKey as menuOnKey, tick as menuTick, render as menuRender,
-  makeSubTitleFmt,
+  makeSubTitleFmt, subNameCat,
 } from './menu_engine.js';
 import {
   loadRuntimeSpecs, createRuntime, disposeRuntime, tickRuntime, renderRuntime,
@@ -78,16 +78,21 @@ async function main() {
   const mcxScreen  = new Screen(document.getElementById('canvas-mcx'),     { cols: 40, rows: 15 });
   const openartScreen = new Screen(document.getElementById('canvas-openart'), { cols: 40, rows: 15 });
 
-  // 4. Per-controller specs.
+  // 4. Per-controller specs. Titles use the firmware's SubNameCat() so MCX
+  // titles render as the 20-char decoration centered on a 40-col row (rest of
+  // row 0 stays blank — the C buffer is zero-padded past 20 chars and the
+  // string draw stops at the first '\0'). See menu_engine.js subNameCat.
+  const CAR3_DECO = ' :(              ): ';
+  const MCX_DECO  = ' :)              ): ';
   const car3Spec = {
     cols: 20, rows: 8, dispNum: 7, paramCol: 11, nameLen: 11, enumNameLen: 8,
-    titleRoot: ' :(   Setting    ): ',
-    titleSubFmt: makeSubTitleFmt(20),
+    titleRoot: subNameCat('Setting', CAR3_DECO, 20),
+    titleSubFmt: makeSubTitleFmt(20, CAR3_DECO),
   };
   const mcxSpec = {
     cols: 40, rows: 15, dispNum: 10, paramCol: 20, nameLen: 11, enumNameLen: 8,
-    titleRoot: ' :)              ): ',
-    titleSubFmt: makeSubTitleFmt(40),
+    titleRoot: subNameCat('Setting', MCX_DECO, 40),
+    titleSubFmt: makeSubTitleFmt(40, MCX_DECO),
   };
 
   // 5. Init OpenArt (subscribes to bus + manual CMD select).
@@ -122,7 +127,13 @@ async function main() {
         return submenuTable.get(name) || null;
       },
       getParam(key) { return State.get(key); },
-      setParam(key, value) { State.set(key, value); },
+      setParam(key, value) {
+        State.set(key, value);
+        // KCA is the only param with a side-effect on the UI (status pill +
+        // routing). Refresh the indicator immediately so adjust-mode shows
+        // the live value, not the saved one.
+        if (key === 'KCA') updateKcaIndicator();
+      },
       saveParams() { State.save(); },
       getEnum(name) { return enums[name] || []; },
       onFunctionStart(fnName, displayName) {
@@ -192,6 +203,46 @@ async function main() {
     },
   });
 
+  // Wire KCA (key-routing) — the source of truth is the car3 menu's KEY_CHANGE
+  // param. keys.js looks this up on every click so changes are reflected
+  // immediately. Long-press Enter on car3 forces it back to locality (firmware
+  // safety: holding Enter pulls control back to car3.0).
+  const KCA_NAMES = enums.key_control || ['locality', 'deviation', 'detection'];
+  function currentKcaName() {
+    return KCA_NAMES[(State.get('KCA') | 0) % KCA_NAMES.length] || 'locality';
+  }
+  setKcaGetter(currentKcaName);
+  setLongPressEnterHandler(() => {
+    State.set('KCA', 0); // locality
+    State.save();
+    updateKcaIndicator();
+    // Flash an indicator on car3 so the user sees it happened
+    if (car3MenuState && car3MenuState.mode === 'menu') {
+      car3MenuState.flash = { text: 'KCA->loc', untilTs: Date.now() + 500 };
+      needsRender.car3 = true;
+    }
+  });
+
+  // KCA status pill (the only UI surface for the value; the user changes it
+  // through the KEY_CHANGE menu item). Updated whenever ctx.setParam writes
+  // the 'KCA' key — see makeCtx below.
+  function updateKcaIndicator() {
+    const v = currentKcaName();
+    const el = document.querySelector('[data-kca-status]');
+    if (el) el.textContent = v;
+    const hint = document.getElementById('mcx-link-hint');
+    if (hint) {
+      if (v === 'locality') {
+        hint.textContent = `等待 car3.0 转发的按键…  (当前 KCA=${v}，未转发)`;
+        hint.style.color = '#6a6a75';
+      } else {
+        hint.textContent = `▶ car3.0 按键已转发到 MCX (KCA=${v})`;
+        hint.style.color = '#6080ff';
+      }
+    }
+  }
+  updateKcaIndicator();
+
   // ----- Launch flow -----
   function onCar3Launch() {
     if (racing) return;
@@ -243,6 +294,13 @@ async function main() {
     mcxBoot?.skip?.();
     State.resetToDefaults();
     freshMenuStates();
+    // Don't let the menu render loop overdraw the boot animation. The boot
+    // functions themselves call screen.clear() first, so this also doubles as
+    // an instant "blank the screens" the moment the user hits RESET.
+    booting = true;
+    car3Screen.clear(COLORS.WHITE);
+    mcxScreen.clear(COLORS.WHITE);
+    openartScreen.clear(COLORS.WHITE);
     // Re-run boot animations on all three screens.
     car3Boot = makeBootCtx();
     mcxBoot  = makeBootCtx();
@@ -252,12 +310,14 @@ async function main() {
       bootMcx(mcxScreen, mcxBoot),
       bootOpenart(openartScreen, openartBoot),
     ]).then(() => {
+      booting = false;
       needsRender.car3 = true;
       needsRender.mcx  = true;
     });
   }
 
   // 10. Boot sequences (parallel) — show boot animation while ready everything else.
+  let booting = true;
   let car3Boot = makeBootCtx();
   let mcxBoot = makeBootCtx();
   const openartBoot = makeBootCtx();
@@ -266,6 +326,7 @@ async function main() {
     bootMcx(mcxScreen, mcxBoot),
     bootOpenart(openartScreen, openartBoot),
   ]);
+  booting = false;
 
   // 11. Race-strip close button (returns to menu — same as L during race).
   const raceClose = document.querySelector('[data-race-close]');
@@ -273,13 +334,16 @@ async function main() {
 
   // 12. Render loop (50ms ≈ 20 fps; plenty for the tiny canvases).
   setInterval(() => {
+    if (booting) return;
     if (racing) {
       drawRaceCar3(car3Screen, Date.now());
       drawRaceMcx(mcxScreen, Date.now());
       return;
     }
-    menuTick(car3MenuState);
-    menuTick(mcxMenuState);
+    // tick() returns true if a flash just expired — we need to re-render to
+    // remove the "success" overlay it left on the canvas.
+    if (menuTick(car3MenuState)) needsRender.car3 = true;
+    if (menuTick(mcxMenuState))  needsRender.mcx  = true;
     tickRuntime(car3Runtime);
     tickRuntime(mcxRuntime);
 
@@ -311,6 +375,7 @@ function collectDefaults(table, dst, enums) {
     if (dst[p.key] !== undefined) continue;
     if (p.kind === 'float') dst[p.key] = 1.0;
     else if (p.kind === 'enum') dst[p.key] = 0;
+    else if (p.kind === 'bool') dst[p.key] = 0;
     else if (typeof p.min === 'number') dst[p.key] = p.min;
     else dst[p.key] = 0;
   }

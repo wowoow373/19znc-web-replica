@@ -15,14 +15,18 @@
 
 <main id="root">
   <!-- ============ car3.0 (160x128) ============ -->
+  <!-- This is the ONLY screen with physical inputs in the real hardware:
+       one d-pad (U/D/L/R/Enter), two slide switches (SW1, SW2), a reset
+       button. MCX is controlled remotely from here via UART forwarding
+       (KCA = deviation/detection); OpenArt has no input at all. -->
   <section class="screen" data-screen="car3">
-    <h2>car3.0 <span class="meta">160×128 TFT</span></h2>
+    <h2>car3.0 <span class="meta">160×128 TFT · 物理按键</span></h2>
     <canvas id="canvas-car3" class="pixel scale-3"></canvas>
     <div class="panel">
       <div class="dpad">
         <button class="dp dp-u" data-screen="car3" data-key="U" title="Up">▲</button>
-        <button class="dp dp-l" data-screen="car3" data-key="L" title="Left / Back">◀</button>
-        <button class="dp dp-c" data-screen="car3" data-key="Enter" title="Enter / Confirm">●</button>
+        <button class="dp dp-l" data-screen="car3" data-key="L" title="Left / Back / 发车">◀</button>
+        <button class="dp dp-c" data-screen="car3" data-key="Enter" title="Enter (长按 0.5s → KCA=locality)">●</button>
         <button class="dp dp-r" data-screen="car3" data-key="R" title="Right / Jump-to-end / Save">▶</button>
         <button class="dp dp-d" data-screen="car3" data-key="D" title="Down">▼</button>
       </div>
@@ -31,15 +35,10 @@
         <label><input type="checkbox" data-sw="car3-SW2"> SW2</label>
         <span class="step-readout" data-step-readout="car3">step: 0.1</span>
       </div>
-      <div class="kca">
-        <label>KCA
-          <select data-kca="car3">
-            <option value="locality">locality</option>
-            <option value="deviation">deviation</option>
-            <option value="detection">detection</option>
-          </select>
-        </label>
-        <span class="hint">deviation → 按键转发到 MCX</span>
+      <div class="kca-status">
+        <span>KCA:</span>
+        <span class="status-pill" data-kca-status>locality</span>
+        <span class="hint">改值进 KEY_CHANGE · 长按 Enter 0.5s 拉回 locality</span>
       </div>
       <button class="skip" data-skip="car3">Skip boot</button>
       <button class="reset" data-reset="car3" title="硬件复位 — 三块屏全部重启，参数恢复默认">RESET</button>
@@ -47,55 +46,32 @@
   </section>
 
   <!-- ============ MCX1.0 (320x240) ============ -->
+  <!-- No physical keys on real hardware — keys arrive via UART when car3's
+       KCA != locality. So no d-pad / no SW UI here. -->
   <section class="screen" data-screen="mcx">
-    <h2>MCX1.0 <span class="meta">320×240 IPS</span></h2>
+    <h2>MCX1.0 <span class="meta">320×240 IPS · 受 car3.0 UART 控制</span></h2>
     <canvas id="canvas-mcx" class="pixel scale-2"></canvas>
-    <div class="panel">
-      <div class="dpad">
-        <button class="dp dp-u" data-screen="mcx" data-key="U" title="Up">▲</button>
-        <button class="dp dp-l" data-screen="mcx" data-key="L" title="Left / Back">◀</button>
-        <button class="dp dp-c" data-screen="mcx" data-key="Enter" title="Enter / Confirm">●</button>
-        <button class="dp dp-r" data-screen="mcx" data-key="R" title="Right / Save">▶</button>
-        <button class="dp dp-d" data-screen="mcx" data-key="D" title="Down">▼</button>
-      </div>
-      <div class="switches">
-        <label><input type="checkbox" data-sw="mcx-SW1"> SW1</label>
-        <label><input type="checkbox" data-sw="mcx-SW2"> SW2</label>
-        <span class="step-readout" data-step-readout="mcx">step: 0.1</span>
-      </div>
-      <div class="kca">
+    <div class="panel slim">
+      <div class="kca-status">
         <span class="hint" id="mcx-link-hint">等待 car3.0 转发的按键…</span>
       </div>
+      <button class="skip" data-skip="mcx">Skip boot</button>
     </div>
   </section>
 
   <!-- ============ OpenArt (320x240) ============ -->
+  <!-- No inputs at all — OpenArt's mode is driven entirely by UART bytes
+       from car3.0 (yoloTest / classifytest / takingPhotos enter classification
+       modes; otherwise it sits at READY!). -->
   <section class="screen" data-screen="openart">
-    <h2>OpenArt <span class="meta">320×240 LCD180</span></h2>
+    <h2>OpenArt <span class="meta">320×240 LCD180 · CMD 驱动</span></h2>
     <canvas id="canvas-openart" class="pixel scale-2"></canvas>
-    <div class="panel">
-      <div class="kca">
-        <label>CMD
-          <select data-openart-cmd>
-            <option value="0xff">0xff NULL</option>
-            <option value="0x01">0x01 target_classification</option>
-            <option value="0x02">0x02 letter_classification</option>
-            <option value="0x03">0x03 number_classification</option>
-            <option value="0x04">0x04 targez_classification</option>
-            <option value="0x10">0x10 put_box0</option>
-            <option value="0x11">0x11 put_box1</option>
-            <option value="0x12">0x12 put_box2</option>
-            <option value="0x20">0x20 reset_box0</option>
-            <option value="0x21">0x21 reset_box1</option>
-            <option value="0x22">0x22 reset_box2</option>
-          </select>
-        </label>
-        <span class="hint">car3.0 进 yoloTest / classifytest 时会自动切换</span>
-      </div>
+    <div class="panel slim">
       <div class="status">
         <span>当前 mode:</span>
         <span class="status-pill" data-openart-status>NULL</span>
       </div>
+      <span class="hint">car3.0 进 yoloTest / classifytest 时会自动切到对应分类模式</span>
     </div>
   </section>
 </main>

@@ -5,7 +5,10 @@
 //          firmware's `(show_row++) % 8` wraparound behavior (lines 9-10
 //          overwrite rows 0 and 1). Followed by a 500ms BEEP-pause, then
 //          clear → menu transition.
-// MCX1.0:  no boot screen in firmware — just clear → menu.
+// MCX1.0:  5 init lines from main.cpp's device_init() sequence — the
+//          firmware doesn't render these on the IPS200 itself (the printfs go
+//          to the debug uart), but the replica writes them onto the screen so
+//          there's parity with car3.0's boot.
 // OpenArt: clear → red `READY!` at pixel (0, 44), then idle until UART CMD.
 
 import { COLORS } from './font.js';
@@ -58,9 +61,24 @@ export async function bootCar3(screen, ctx) {
   screen.clear(COLORS.WHITE);
 }
 
+const MCX_BOOT_LINES = [
+  { row: 0, text: 'zf_board_init_finished' },
+  { row: 1, text: 'user_uart_init_finished' },
+  { row: 2, text: 'sd_card_init_finished' },
+  { row: 3, text: 'debug_uart_ready' },
+  { row: 4, text: 'ips200_init_finished' },
+  { row: 5, text: 'scc8660_init_finished' },
+];
+
 export async function bootMcx(screen, ctx) {
   screen.clear(COLORS.WHITE);
-  if (!ctx.skipped) await ctx.sleep(150);
+  for (const { row, text } of MCX_BOOT_LINES) {
+    if (ctx.skipped) break;
+    screen.textRow(0, row, screen.cols, text, COLORS.BLUE, COLORS.WHITE);
+    await ctx.sleep(250);
+  }
+  if (!ctx.skipped) await ctx.sleep(400);
+  screen.clear(COLORS.WHITE);
 }
 
 export async function bootOpenart(screen, ctx) {

@@ -4,7 +4,7 @@
     {"name": "save",           "type": "function", "fn": "save_acattitude_strandard"},
     {"name": "ac_type",        "type": "param", "param": {"kind": "enum", "key": "menuactype", "enum": "ac_type"}},
     {"name": "total_attitude", "type": "param", "param": {"kind": "int", "key": "total_attitude_strandard"}},
-    {"name": "stand_enable",   "type": "param", "param": {"kind": "int", "key": "use_standard_flag", "min": 0, "max": 1}},
+    {"name": "stand_enable",   "type": "param", "param": {"kind": "bool", "key": "use_standard_flag"}},
     {"name": "x",              "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.x"}},
     {"name": "y",              "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.y"}},
     {"name": "yaw",            "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.yaw"}},
