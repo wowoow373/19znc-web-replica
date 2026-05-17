@@ -1,0 +1,7 @@
+{
+  "title": "uart_test",
+  "items": [
+    {"name": "classifyuart",  "type": "function", "fn": "uart_test_classify"},
+    {"name": "deviationuart", "type": "function", "fn": "uart_test_deviation"}
+  ]
+}

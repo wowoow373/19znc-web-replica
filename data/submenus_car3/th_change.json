@@ -1,0 +1,8 @@
+{
+  "title": "th_change",
+  "items": [
+    {"name": "OSTU_MAX", "type": "param", "param": {"kind": "uint", "key": "OSTU_MAX", "min": 0, "max": 255}},
+    {"name": "OSTU_MIN", "type": "param", "param": {"kind": "uint", "key": "OSTU_MIN", "min": 0, "max": 255}},
+    {"name": "EXPOSE_T", "type": "param", "param": {"kind": "int",  "key": "ZZFExposeTime"}}
+  ]
+}

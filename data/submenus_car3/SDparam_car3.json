@@ -1,0 +1,7 @@
+{
+  "title": "SDparam",
+  "items": [
+    {"name": "SDRecordMode", "type": "param",    "param": {"kind": "enum", "key": "sdcardParam.recordImgMode", "enum": "SDRecordImgMode"}},
+    {"name": "SDclear",      "type": "function", "fn": "SDtest_clear"}
+  ]
+}

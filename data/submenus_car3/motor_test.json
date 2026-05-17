@@ -1,0 +1,10 @@
+{
+  "title": "motor_test",
+  "items": [
+    {"name": "LB test",      "type": "function", "fn": "motor_test_LB"},
+    {"name": "LT test",      "type": "function", "fn": "motor_test_LT"},
+    {"name": "RB test",      "type": "function", "fn": "motor_test_RB"},
+    {"name": "RT test",      "type": "function", "fn": "motor_test_RT"},
+    {"name": "MotorTestAll", "type": "submenu",  "submenu": "motortest_all"}
+  ]
+}

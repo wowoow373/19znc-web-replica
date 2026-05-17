@@ -1,0 +1,9 @@
+{
+  "title": "servotest_all",
+  "items": [
+    {"name": "ServoTestLine",   "type": "param",    "param": {"kind": "enum", "key": "servo_test_line", "enum": "servo_test_line"}},
+    {"name": "SerTtWay",        "type": "param",    "param": {"kind": "enum", "key": "servo_test_way",  "enum": "servo_test_way"}},
+    {"name": "servo_test_all",  "type": "function", "fn": "servo_test_all_step"},
+    {"name": "servo_test_time", "type": "function", "fn": "servo_test_time"}
+  ]
+}

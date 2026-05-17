@@ -1,0 +1,12 @@
+{
+  "title": "a_c_attitude_get",
+  "items": [
+    {"name": "save",           "type": "function", "fn": "save_acattitude"},
+    {"name": "ac_number",      "type": "param", "param": {"kind": "int", "key": "ac_number"}},
+    {"name": "total_attitude", "type": "param", "param": {"kind": "int", "key": "total_attitude"}},
+    {"name": "x",              "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.x"}},
+    {"name": "y",              "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.y"}},
+    {"name": "yaw",            "type": "info",  "param": {"kind": "float", "key": "ZAP_Attitude.yaw"}},
+    {"name": "show",           "type": "function", "fn": "show_ac_attitude"}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "title": "taking_photo_sd",
+  "items": [
+    {"name": "SDclear",      "type": "function", "fn": "SDtest_clear"},
+    {"name": "takingPhotos", "type": "function", "fn": "takingPhotos"}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Setting",
+  "items": [
+    {"name": "RunTMD",      "type": "function", "fn": "imgDealing"},
+    {"name": "Lateral",     "type": "function", "fn": "imgDealing_Lateral_Test"},
+    {"name": "ThresholdAd", "type": "function", "fn": "AllThresholdAdjustment"},
+    {"name": "HsvAdjust",   "type": "function", "fn": "HSVAllThresholdAdjustment"},
+    {"name": "ParamAdjust", "type": "submenu",  "submenu": "ParamAdjust"},
+    {"name": "showRawMap",  "type": "function", "fn": "showRawMap"},
+    {"name": "SDtest",      "type": "submenu",  "submenu": "SD_test_Table"},
+    {"name": "KEY_CHANGE",  "type": "param",    "param": {"kind": "enum", "key": "MCX_KCA", "enum": "key_control"}}
+  ]
+}

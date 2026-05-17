@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>19ZNC 三屏复刻 · web-replica</title>
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/screen.css">
+</head>
+<body>
+<header>
+  <h1>19ZNC 三屏复刻</h1>
+  <p class="subtitle">主控 car3.0 · 协控 MCX1.0 · 协控 OpenArt — 一份 UI 回忆</p>
+</header>
+
+<main id="root">
+  <!-- ============ car3.0 (160x128) ============ -->
+  <section class="screen" data-screen="car3">
+    <h2>car3.0 <span class="meta">160×128 TFT</span></h2>
+    <canvas id="canvas-car3" class="pixel scale-3"></canvas>
+    <div class="panel">
+      <div class="dpad">
+        <button class="dp dp-u" data-screen="car3" data-key="U" title="Up">▲</button>
+        <button class="dp dp-l" data-screen="car3" data-key="L" title="Left / Back">◀</button>
+        <button class="dp dp-c" data-screen="car3" data-key="Enter" title="Enter / Confirm">●</button>
+        <button class="dp dp-r" data-screen="car3" data-key="R" title="Right / Jump-to-end / Save">▶</button>
+        <button class="dp dp-d" data-screen="car3" data-key="D" title="Down">▼</button>
+      </div>
+      <div class="switches">
+        <label><input type="checkbox" data-sw="car3-SW1"> SW1</label>
+        <label><input type="checkbox" data-sw="car3-SW2"> SW2</label>
+        <span class="step-readout" data-step-readout="car3">step: 0.1</span>
+      </div>
+      <div class="kca">
+        <label>KCA
+          <select data-kca="car3">
+            <option value="locality">locality</option>
+            <option value="deviation">deviation</option>
+            <option value="detection">detection</option>
+          </select>
+        </label>
+        <span class="hint">deviation → 按键转发到 MCX</span>
+      </div>
+      <button class="skip" data-skip="car3">Skip boot</button>
+    </div>
+  </section>
+
+  <!-- ============ MCX1.0 (320x240) ============ -->
+  <section class="screen" data-screen="mcx">
+    <h2>MCX1.0 <span class="meta">320×240 IPS</span></h2>
+    <canvas id="canvas-mcx" class="pixel scale-2"></canvas>
+    <div class="panel">
+      <div class="dpad">
+        <button class="dp dp-u" data-screen="mcx" data-key="U" title="Up">▲</button>
+        <button class="dp dp-l" data-screen="mcx" data-key="L" title="Left / Back">◀</button>
+        <button class="dp dp-c" data-screen="mcx" data-key="Enter" title="Enter / Confirm">●</button>
+        <button class="dp dp-r" data-screen="mcx" data-key="R" title="Right / Save">▶</button>
+        <button class="dp dp-d" data-screen="mcx" data-key="D" title="Down">▼</button>
+      </div>
+      <div class="switches">
+        <label><input type="checkbox" data-sw="mcx-SW1"> SW1</label>
+        <label><input type="checkbox" data-sw="mcx-SW2"> SW2</label>
+        <span class="step-readout" data-step-readout="mcx">step: 0.1</span>
+      </div>
+      <div class="kca">
+        <span class="hint" id="mcx-link-hint">等待 car3.0 转发的按键…</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OpenArt (320x240) ============ -->
+  <section class="screen" data-screen="openart">
+    <h2>OpenArt <span class="meta">320×240 LCD180</span></h2>
+    <canvas id="canvas-openart" class="pixel scale-2"></canvas>
+    <div class="panel">
+      <div class="kca">
+        <label>CMD
+          <select data-openart-cmd>
+            <option value="0xff">0xff NULL</option>
+            <option value="0x01">0x01 target_classification</option>
+            <option value="0x02">0x02 letter_classification</option>
+            <option value="0x03">0x03 number_classification</option>
+            <option value="0x04">0x04 targez_classification</option>
+            <option value="0x10">0x10 put_box0</option>
+            <option value="0x11">0x11 put_box1</option>
+            <option value="0x12">0x12 put_box2</option>
+            <option value="0x20">0x20 reset_box0</option>
+            <option value="0x21">0x21 reset_box1</option>
+            <option value="0x22">0x22 reset_box2</option>
+          </select>
+        </label>
+        <span class="hint">car3.0 进 yoloTest / classifytest 时会自动切换</span>
+      </div>
+      <div class="status">
+        <span>当前 mode:</span>
+        <span class="status-pill" data-openart-status>NULL</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <small>这是 car3.0 / MCX1.0 / OpenArt 三块屏的 clean-room UI 复刻 · 不含任何竞赛源码</small>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "title": "ramp_change",
+  "items": [
+    {"name": "ramp_length",    "type": "param", "param": {"kind": "float", "key": "ramp_length"}},
+    {"name": "left_right",     "type": "param", "param": {"kind": "uint",  "key": "ramp_left_or_right", "min": 0, "max": 1}},
+    {"name": "ramp_band",      "type": "param", "param": {"kind": "uint",  "key": "ramp_band"}},
+    {"name": "ramp_pitch",     "type": "function", "fn": "ramp_test"},
+    {"name": "save_ramp_zero", "type": "param", "param": {"kind": "float", "key": "ramp_zero"}}
+  ]
+}

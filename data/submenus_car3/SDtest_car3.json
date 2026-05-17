@@ -1,0 +1,8 @@
+{
+  "title": "SDtest",
+  "items": [
+    {"name": "SDclear",    "type": "function", "fn": "SDtest_clear"},
+    {"name": "write_test", "type": "function", "fn": "SDtest_write"},
+    {"name": "read_test",  "type": "function", "fn": "SDtest_read"}
+  ]
+}

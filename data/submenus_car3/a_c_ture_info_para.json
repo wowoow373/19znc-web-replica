@@ -1,0 +1,8 @@
+{
+  "title": "LR_true",
+  "items": [
+    {"name": "AC_index",    "type": "param", "param": {"kind": "uint", "key": "ac_index_true", "min": 0, "max": 7}},
+    {"name": "TRUEis_jump", "type": "param", "param": {"kind": "enum", "key": "a_c_true_jump", "enum": "a_c_ture_state"}},
+    {"name": "save",        "type": "function", "fn": "save_ac_data"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "title": "SDtest",
+  "items": [
+    {"name": "save_img", "type": "function", "fn": "SDtest_write"},
+    {"name": "read_img", "type": "function", "fn": "SDtest_read"},
+    {"name": "GO!",      "type": "function", "fn": "SDtest_clear"}
+  ]
+}

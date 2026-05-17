@@ -1,0 +1,12 @@
+{
+  "title": "MotorTestAll",
+  "items": [
+    {"name": "LB_duty",     "type": "param", "param": {"kind": "int", "key": "motor.LB"}},
+    {"name": "LT_duty",     "type": "param", "param": {"kind": "int", "key": "motor.LT"}},
+    {"name": "RB_duty",     "type": "param", "param": {"kind": "int", "key": "motor.RB"}},
+    {"name": "RT_duty",     "type": "param", "param": {"kind": "int", "key": "motor.RT"}},
+    {"name": "stop",        "type": "function", "fn": "motor_stop"},
+    {"name": "advance_max", "type": "function", "fn": "motor_advance_max"},
+    {"name": "back_max",    "type": "function", "fn": "motor_back_max"}
+  ]
+}

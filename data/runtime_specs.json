@@ -1,0 +1,47 @@
+{
+  "_doc": "Per-function runtime spec. The 'fn' field on a 'function'-type menu item resolves to a key here. Missing keys fall through to a generic placeholder. 'draw' picks a renderer in runtime_screens.js. 'emits' is one of: openart_cmd. 'exitKey' defaults to L.",
+
+  "show_fps_loop":      {"draw": "fps_panel"},
+  "show_weels_speed":   {"draw": "wheel_speeds"},
+  "show_car_speed":     {"draw": "car_speed"},
+  "show_attitude":      {"draw": "attitude"},
+  "show_state":         {"draw": "state_log"},
+  "show_curvature":     {"draw": "curvature"},
+  "show_interven_info": {"draw": "interven"},
+  "show_yolo_info":     {"draw": "yolo_info"},
+  "show_img":           {"draw": "image"},
+  "show_ann":           {"draw": "neural_log"},
+
+  "testsite":           {"draw": "site_test"},
+  "testImg":            {"draw": "image"},
+  "servotest_all":      {"draw": "servo_bars"},
+  "perspectiveMatrix_show": {"draw": "perspective_grid"},
+  "perspectiveMatrix_take": {"draw": "perspective_take"},
+
+  "motor_test_LB":  {"draw": "motor_single", "label": "LB"},
+  "motor_test_LT":  {"draw": "motor_single", "label": "LT"},
+  "motor_test_RB":  {"draw": "motor_single", "label": "RB"},
+  "motor_test_RT":  {"draw": "motor_single", "label": "RT"},
+  "motor_test_all": {"draw": "motors_all"},
+
+  "yoloTest":     {"draw": "yolo_proxy",    "emits": "openart_cmd", "cmd": 1},
+  "classifytest": {"draw": "classify_proxy","emits": "openart_cmd", "cmd": 2},
+  "takingPhotos": {"draw": "photo",         "emits": "openart_cmd", "cmd": 1},
+
+  "uart_test_classify":   {"draw": "uart_log", "label": "classifyuart"},
+  "uart_test_deviation":  {"draw": "uart_log", "label": "deviationuart"},
+
+  "SDtest_clear":  {"draw": "sd_status", "label": "SD clear"},
+  "SDtest_write":  {"draw": "sd_status", "label": "write test"},
+  "SDtest_read":   {"draw": "sd_status", "label": "read test"},
+
+  "show_ac_attitude_strandard":  {"draw": "attitude_table"},
+  "show_ac_attitude":            {"draw": "attitude_table"},
+  "show_endPut_attitude":        {"draw": "attitude_table"},
+
+  "imgDealing":               {"draw": "tgt_info"},
+  "imgDealing_Lateral_Test":  {"draw": "lateral_tracking"},
+  "AllThresholdAdjustment":   {"draw": "thresh_lab"},
+  "HSVAllThresholdAdjustment":{"draw": "thresh_hsv"},
+  "showRawMap":               {"draw": "raw_map"}
+}

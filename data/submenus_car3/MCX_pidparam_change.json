@@ -1,0 +1,17 @@
+{
+  "title": "MCXpid",
+  "items": [
+    {"name": "Drift_p ",  "type": "param", "param": {"kind": "float", "key": "MCX_Drift_pid.Kp"}},
+    {"name": "Drift_i ",  "type": "param", "param": {"kind": "float", "key": "MCX_Drift_pid.Ki"}},
+    {"name": "Drift_d ",  "type": "param", "param": {"kind": "float", "key": "MCX_Drift_pid.Kd"}},
+    {"name": "Direct_p",  "type": "param", "param": {"kind": "float", "key": "MCX_Direct_pid.Kp"}},
+    {"name": "Direct_i",  "type": "param", "param": {"kind": "float", "key": "MCX_Direct_pid.Ki"}},
+    {"name": "Direct_d",  "type": "param", "param": {"kind": "float", "key": "MCX_Direct_pid.Kd"}},
+    {"name": "Drift_p2",  "type": "param", "param": {"kind": "float", "key": "MCX_Drift_pid_left_right.Kp"}},
+    {"name": "Drift_i2 ", "type": "param", "param": {"kind": "float", "key": "MCX_Drift_pid_left_right.Ki"}},
+    {"name": "Drift_d2 ", "type": "param", "param": {"kind": "float", "key": "MCX_Drift_pid_left_right.Kd"}},
+    {"name": "Direct_p2", "type": "param", "param": {"kind": "float", "key": "MCX_Direct_pid_left_right.Kp"}},
+    {"name": "Direct_i2", "type": "param", "param": {"kind": "float", "key": "MCX_Direct_pid_left_right.Ki"}},
+    {"name": "Direct_d2", "type": "param", "param": {"kind": "float", "key": "MCX_Direct_pid_left_right.Kd"}}
+  ]
+}

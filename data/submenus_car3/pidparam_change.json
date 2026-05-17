@@ -1,0 +1,29 @@
+{
+  "title": "pid",
+  "items": [
+    {"name": "loPx_race", "type": "param", "param": {"kind": "float", "key": "Location_pid_x_on_race.Kp"}},
+    {"name": "lo i x",    "type": "param", "param": {"kind": "float", "key": "Location_pid_x_on_race.Ki"}},
+    {"name": "lo d x",    "type": "param", "param": {"kind": "float", "key": "Location_pid_x_on_race.Kd"}},
+    {"name": "loP yrace", "type": "param", "param": {"kind": "float", "key": "Location_pid_y_on_race.Kp"}},
+    {"name": "lo i y",    "type": "param", "param": {"kind": "float", "key": "Location_pid_y_on_race.Ki"}},
+    {"name": "lo d y",    "type": "param", "param": {"kind": "float", "key": "Location_pid_y_on_race.Kd"}},
+    {"name": "Drift_p ",  "type": "param", "param": {"kind": "float", "key": "Drift_pid.Kp"}},
+    {"name": "Drift_i ",  "type": "param", "param": {"kind": "float", "key": "Drift_pid.Ki"}},
+    {"name": "Drift_d ",  "type": "param", "param": {"kind": "float", "key": "Drift_pid.Kd"}},
+    {"name": "Direct_p",  "type": "param", "param": {"kind": "float", "key": "Direct_pid.Kp"}},
+    {"name": "Direct_i",  "type": "param", "param": {"kind": "float", "key": "Direct_pid.Ki"}},
+    {"name": "Direct_d",  "type": "param", "param": {"kind": "float", "key": "Direct_pid.Kd"}},
+    {"name": "speed P",   "type": "param", "param": {"kind": "float", "key": "Speed_pid[0].Kp"}},
+    {"name": "speed i",   "type": "param", "param": {"kind": "float", "key": "Speed_pid[0].Ki"}},
+    {"name": "speed d",   "type": "param", "param": {"kind": "float", "key": "Speed_pid[0].Kd"}},
+    {"name": "lo P x",    "type": "param", "param": {"kind": "float", "key": "Location_pid_x.Kp"}},
+    {"name": "lo i x",    "type": "param", "param": {"kind": "float", "key": "Location_pid_x.Ki"}},
+    {"name": "lo d x",    "type": "param", "param": {"kind": "float", "key": "Location_pid_x.Kd"}},
+    {"name": "lo P y",    "type": "param", "param": {"kind": "float", "key": "Location_pid_y.Kp"}},
+    {"name": "lo i y",    "type": "param", "param": {"kind": "float", "key": "Location_pid_y.Ki"}},
+    {"name": "lo d y",    "type": "param", "param": {"kind": "float", "key": "Location_pid_y.Kd"}},
+    {"name": "angle P",   "type": "param", "param": {"kind": "float", "key": "Angle_pid.Kp"}},
+    {"name": "angle i",   "type": "param", "param": {"kind": "float", "key": "Angle_pid.Ki"}},
+    {"name": "angle d",   "type": "param", "param": {"kind": "float", "key": "Angle_pid.Kd"}}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "title": "speed_change",
+  "items": [
+    {"name": "max_speed", "type": "param", "param": {"kind": "int", "key": "max_track_speed"}},
+    {"name": "min_speed", "type": "param", "param": {"kind": "int", "key": "min_track_speed"}},
+    {"name": "track_acc", "type": "param", "param": {"kind": "int", "key": "track_acc"}}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "title": "servodutytest",
+  "items": [
+    {"name": "servo1_duty",   "type": "param", "param": {"kind": "int", "key": "servo_duty.S1"}},
+    {"name": "servo2_duty",   "type": "param", "param": {"kind": "int", "key": "servo_duty.S2"}},
+    {"name": "servo3_duty",   "type": "param", "param": {"kind": "int", "key": "servo_duty.S3"}},
+    {"name": "savekey_frame", "type": "function", "fn": "savekey_frame"},
+    {"name": "frame++",       "type": "function", "fn": "frame_inc"},
+    {"name": "frame--",       "type": "function", "fn": "frame_dec"},
+    {"name": "magnet_on",     "type": "function", "fn": "magnet_on"},
+    {"name": "magnet_off",    "type": "function", "fn": "magnet_off"},
+    {"name": "servo4_duty",   "type": "param", "param": {"kind": "int", "key": "servo_duty.S4"}},
+    {"name": "Cservo_duty",   "type": "param", "param": {"kind": "int", "key": "servo_duty.C"}}
+  ]
+}

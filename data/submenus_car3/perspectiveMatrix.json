@@ -1,0 +1,9 @@
+{
+  "title": "perspectiveMatrix",
+  "items": [
+    {"name": "standardK",  "type": "param", "param": {"kind": "float", "key": "standardK"}},
+    {"name": "standardB",  "type": "param", "param": {"kind": "float", "key": "standardB"}},
+    {"name": "show photo", "type": "function", "fn": "perspectiveMatrix_show"},
+    {"name": "take photo", "type": "function", "fn": "perspectiveMatrix_take"}
+  ]
+}

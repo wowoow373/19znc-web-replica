@@ -1,0 +1,10 @@
+{
+  "title": "LR_change",
+  "items": [
+    {"name": "AC_index",   "type": "param", "param": {"kind": "uint", "key": "ac_index", "min": 0, "max": 7}},
+    {"name": "true_false", "type": "param", "param": {"kind": "enum", "key": "a_c_true_false",     "enum": "ac_true_false"}},
+    {"name": "is_left",    "type": "param", "param": {"kind": "enum", "key": "a_c_left_or_right",  "enum": "ac_true_false"}},
+    {"name": "is_track",   "type": "param", "param": {"kind": "enum", "key": "a_c_jump_or_not",    "enum": "ac_true_false"}},
+    {"name": "save",       "type": "function", "fn": "save_ac_data"}
+  ]
+}

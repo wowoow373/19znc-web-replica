@@ -1,0 +1,18 @@
+{
+  "_doc": "Enum tables — values are displayed by name (cropped to enumNameLen). Order matters: integer param stores index.",
+
+  "locate_mode": ["safe_mode", "mixed_mode", "fast_mode"],
+
+  "key_control":  ["locality", "deviation", "detection"],
+
+  "servo_test_line": ["cl_down", "cl_up", "down_put", "up_put"],
+  "servo_test_way":  ["byKeyfra", "by_cnt", "all_test", "test_put"],
+
+  "SDRecordImgMode": ["allmap", "imgGray"],
+
+  "a_c_ture_state":  ["DEFAULT", "TRACK", "JUMP"],
+  "ac_true_false":   ["TRUE", "FALSE"],
+  "ac_type":         ["a_left", "a_right", "c_left", "c_right"],
+
+  "SDMode_mcx": ["SD_STOP", "ParaRead", "ParaWrit", "ParaEras", "ImgRead", "ImgWrit", "ImgEras"]
+}
