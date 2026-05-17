@@ -1,10 +1,11 @@
 // OpenArt screen: no menu, no buttons. After boot it shows red `READY!` and
 // then re-renders on every `openart_cmd` event (from the bus or the manual
 // CMD selector). Each CMD maps to a label/classification overlay drawn over a
-// procedurally generated "frame" placeholder.
+// real camera frame from assets/sample_frames/.
 
 import { COLORS } from './font.js';
 import { onOpenartCmd } from './uart_bus.js';
+import { pickFrame } from './frames.js';
 
 // CMD byte → display state
 const CMD_TABLE = {
@@ -68,8 +69,8 @@ function drawReady(screen) {
 }
 
 function drawClassification(screen, label, accentColor) {
-  // Fake camera frame: gray gradient + a couple "track" lines + a ROI rect
-  drawFakeFrame(screen);
+  // Real camera frame, scaled to fill the OpenArt canvas
+  drawRealFrame(screen, label);
 
   // ROI: firmware uses an 88×88 ROI per main.py:284-285. Place it center-ish.
   const w = screen.w, h = screen.h;
@@ -87,30 +88,12 @@ function drawClassification(screen, label, accentColor) {
   screen.textScaled(roiX, roiY + roiH + 4, conf, accentColor, COLORS.WHITE, 2);
 }
 
-function drawFakeFrame(screen) {
-  const { ctx, w, h } = screen;
-  // Vertical gray gradient
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, '#cccccc');
-  grad.addColorStop(1, '#888888');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
-
-  // Two "track" diagonal lines + a horizon
-  ctx.fillStyle = '#ffffff';
-  for (let y = 0; y < h; y++) {
-    const t = y / h;
-    const leftX = Math.floor(w * 0.5 - (1 - t) * w * 0.3);
-    const rightX = Math.floor(w * 0.5 + (1 - t) * w * 0.3);
-    ctx.fillRect(leftX, y, 2, 1);
-    ctx.fillRect(rightX, y, 2, 1);
-  }
-  ctx.fillStyle = '#666666';
-  ctx.fillRect(0, Math.floor(h * 0.45), w, 1);
-
-  // A few scattered specks (simulate sensor noise)
-  ctx.fillStyle = '#777777';
-  for (let i = 0; i < 20; i++) {
-    ctx.fillRect((i * 37) % w, (i * 73) % h, 1, 1);
+function drawRealFrame(screen, seed) {
+  const img = pickFrame(seed || 'openart');
+  if (img) {
+    screen.drawImage(img, 0, 0, screen.w, screen.h);
+  } else {
+    // Fallback if frames haven't loaded
+    screen.clear(COLORS.WHITE);
   }
 }

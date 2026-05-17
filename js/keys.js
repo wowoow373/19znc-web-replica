@@ -26,7 +26,7 @@ export function onKey(screenId, handler) {
   screenState[screenId].handler = handler;
 }
 
-export function bindButtons({ onSkip }) {
+export function bindButtons({ onSkip, onReset }) {
   // d-pad buttons
   document.querySelectorAll('.dp[data-key]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -69,6 +69,11 @@ export function bindButtons({ onSkip }) {
   // Skip-boot
   document.querySelectorAll('button.skip[data-skip]').forEach((btn) => {
     btn.addEventListener('click', () => onSkip(btn.dataset.skip));
+  });
+
+  // RESET (car3 only — its MCU is the master, hitting reset reboots all 3)
+  document.querySelectorAll('button.reset[data-reset]').forEach((btn) => {
+    btn.addEventListener('click', () => onReset?.(btn.dataset.reset));
   });
 
   // Init step readouts

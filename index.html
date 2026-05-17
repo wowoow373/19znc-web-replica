@@ -42,6 +42,7 @@
         <span class="hint">deviation → 按键转发到 MCX</span>
       </div>
       <button class="skip" data-skip="car3">Skip boot</button>
+      <button class="reset" data-reset="car3" title="硬件复位 — 三块屏全部重启，参数恢复默认">RESET</button>
     </div>
   </section>
 
@@ -98,6 +99,17 @@
     </div>
   </section>
 </main>
+
+<section id="race-strip" hidden>
+  <div class="race-strip-header">
+    <span class="race-label">RACE FOOTAGE · 2024_08_18_19_06_IMG_6891 · 480p · 42s</span>
+    <button class="race-close" data-race-close title="关闭并回到菜单">×</button>
+  </div>
+  <video id="race-video" controls preload="metadata" playsinline>
+    <source src="assets/race.mp4" type="video/mp4">
+    您的浏览器不支持 HTML5 video。
+  </video>
+</section>
 
 <footer>
   <small>这是 car3.0 / MCX1.0 / OpenArt 三块屏的 clean-room UI 复刻 · 不含任何竞赛源码</small>

@@ -4,6 +4,7 @@
 
 import { COLORS, CELL } from './font.js';
 import { emitOpenartCmd } from './uart_bus.js';
+import { pickFrame } from './frames.js';
 
 let SPECS = {};
 
@@ -288,13 +289,19 @@ const DRAW = {
 // ---------------------------------------------------------------------------
 
 function drawFakeCameraFrame(screen, rt) {
+  // Try a real frame first (deterministic per runtime by fnName)
+  const img = pickFrame(rt?.fnName || 'camera');
+  if (img) {
+    screen.drawImage(img, 0, 0, screen.w, screen.h);
+    return;
+  }
+  // Fallback procedural frame if real frames aren't loaded yet
   const { ctx, w, h } = screen;
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, '#bbbbbb');
   grad.addColorStop(1, '#777777');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
-  // Mock track lines
   ctx.fillStyle = '#ffffff';
   for (let y = Math.floor(h * 0.4); y < h; y++) {
     const t = (y - h * 0.4) / (h * 0.6);
@@ -302,11 +309,6 @@ function drawFakeCameraFrame(screen, rt) {
     const rx = Math.floor(w * 0.5 + t * w * 0.45);
     ctx.fillRect(lx, y, 2, 1);
     ctx.fillRect(rx, y, 2, 1);
-  }
-  // Specks
-  ctx.fillStyle = '#888888';
-  for (let i = 0; i < 30; i++) {
-    ctx.fillRect((i * 31 + rt.rng() * 50) % w, (i * 47 + rt.rng() * 50) % h, 1, 1);
   }
 }
 

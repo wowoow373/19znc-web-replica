@@ -38,6 +38,13 @@ export class Screen {
     this.ctx.fillRect(px + w - 1, py, 1, h);
   }
 
+  // Draw an HTMLImageElement scaled to fill (px,py,w,h). Smoothing is disabled
+  // so the upscale stays crisp at any zoom level.
+  drawImage(img, dx = 0, dy = 0, dw = this.w, dh = this.h) {
+    if (!img || !img.complete || !img.naturalWidth) return;
+    this.ctx.drawImage(img, dx, dy, dw, dh);
+  }
+
   text(col, row, str, fg, bg, invert = false) {
     drawText(this.ctx, col, row, str, fg, bg, invert);
   }

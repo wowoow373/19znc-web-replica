@@ -134,3 +134,65 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
   text-decoration: underline;
 }
 .skip:hover { color: #8aa0ff; }
+
+/* RESET button: hardware-reset analogue, sits next to Skip-boot on car3 */
+.reset {
+  align-self: flex-start;
+  background: #4a1f24;
+  color: #ffb0b0;
+  border: 1px solid #883030;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 80ms, color 80ms;
+}
+.reset:hover { background: #683040; color: #ffd0d0; }
+.reset:active { background: #883050; }
+
+/* Race-video strip: appears below the three screens after 发车. */
+#race-strip {
+  margin: 8px 24px 24px;
+  padding: 16px;
+  background: #1f1f23;
+  border: 1px solid #3a3042;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#race-strip[hidden] { display: none; }
+
+.race-strip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.race-label {
+  color: #ffb0b0;
+  font-family: 'Consolas', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.race-close {
+  background: transparent;
+  color: #c0c0c8;
+  border: 1px solid #3a3a42;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.race-close:hover { background: #2a2a30; color: #fff; }
+
+#race-video {
+  width: 100%;
+  max-height: 60vh;
+  background: #000;
+  border-radius: 4px;
+}

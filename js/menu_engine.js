@@ -7,7 +7,7 @@
 //
 // Keys (menu mode):
 //   U/D: cursor up/down (with cross-page navigation)
-//   L  : pop submenu (no-op on root)
+//   L  : pop submenu — at root invokes ctx.onLaunch() (the firmware's 发车)
 //   R  : jump cursor to last item of the whole menu
 //   E  : enter selected item — submenu / adjust / function
 //
@@ -97,7 +97,13 @@ function onKeyMenu(state, key, sw, spec, ctx) {
       return;
     }
     case 'L': {
-      if (state.stack.length > 1) state.stack.pop();
+      if (state.stack.length > 1) {
+        state.stack.pop();
+      } else {
+        // At the root, L mirrors the firmware: Menu_Process loop sees
+        // ExitMark=1, falls out into main()'s begin_all() → race loop.
+        ctx.onLaunch?.();
+      }
       return;
     }
     case 'Enter': {

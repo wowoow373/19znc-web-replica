@@ -1,6 +1,11 @@
 // Entry point. Loads assets, instantiates the three screens, runs boot
 // sequences, wires the menu engine + virtual buttons + UART bus, and starts
 // the render/tick loop.
+//
+// New (rev 2): also wires the RESET button (re-runs the whole boot+menu
+// pipeline + resets persisted params) and the 发车 (launch) flow that triggers
+// when L is pressed at the root of car3.0's menu — mirroring the firmware's
+// `Menu_Process → begin_all() → run_TMD()` transition.
 
 import { loadFont, COLORS } from './font.js';
 import { Screen } from './screen.js';
@@ -19,7 +24,9 @@ import {
   loadRuntimeSpecs, createRuntime, disposeRuntime, tickRuntime, renderRuntime,
 } from './runtime_screens.js';
 import { initOpenart } from './openart.js';
-import { onKeyForward } from './uart_bus.js';
+import { onKeyForward, emitOpenartCmd } from './uart_bus.js';
+import { loadFrames } from './frames.js';
+import { drawRaceCar3, drawRaceMcx } from './race.js';
 
 const CAR3_SUBMENUS = [
   'pidparam_change', 'MCX_pidparam_change', 'servoparam_change',
@@ -38,10 +45,11 @@ async function fetchJson(url) {
 }
 
 async function main() {
-  // 1. Load font, runtime specs, menu data, submenus in parallel.
-  const [, , menuCar3, menuMcx, enums, car3Subs, mcxSubs] = await Promise.all([
+  // 1. Load font, runtime specs, menu data, submenus, frames in parallel.
+  const [, , , menuCar3, menuMcx, enums, car3Subs, mcxSubs] = await Promise.all([
     loadFont(),
     loadRuntimeSpecs(),
+    loadFrames(),
     fetchJson('data/menu_car3.json'),
     fetchJson('data/menu_mcx.json'),
     fetchJson('data/enums.json'),
@@ -85,26 +93,30 @@ async function main() {
   // 5. Init OpenArt (subscribes to bus + manual CMD select).
   initOpenart(openartScreen);
 
-  // 6. Boot sequences (parallel) — show boot animation while ready everything else.
-  const car3Boot = makeBootCtx();
-  const mcxBoot = makeBootCtx();
-  const openartBoot = makeBootCtx();
-  await Promise.all([
-    bootCar3(car3Screen, car3Boot),
-    bootMcx(mcxScreen, mcxBoot),
-    bootOpenart(openartScreen, openartBoot),
-  ]);
+  // Shared race-mode flag (set by car3 L-on-root, cleared by car3 RESET or
+  // closing the race strip). When true, the render loop draws drawRaceCar3 /
+  // drawRaceMcx instead of the menu.
+  let racing = false;
 
-  // 7. Create menu states.
-  const car3MenuState = createMenuState(menuCar3, car3Spec);
-  const mcxMenuState  = createMenuState(menuMcx, mcxSpec);
-
-  // Per-screen runtime instance (set when entering a function-type item).
+  // 6. Create menu states first so reset can recreate them.
+  let car3MenuState;
+  let mcxMenuState;
   let car3Runtime = null;
-  let mcxRuntime = null;
+  let mcxRuntime  = null;
+  let needsRender = { car3: true, mcx: true };
 
-  // 8. Menu ctx (resolver, state, function lifecycle).
-  function makeCtx(screenId, menuState, getRuntime, setRuntime) {
+  function freshMenuStates() {
+    car3MenuState = createMenuState(menuCar3, car3Spec);
+    mcxMenuState  = createMenuState(menuMcx, mcxSpec);
+    car3Runtime = null;
+    mcxRuntime  = null;
+    needsRender.car3 = true;
+    needsRender.mcx  = true;
+  }
+  freshMenuStates();
+
+  // 7. Menu ctx (resolver, state, function lifecycle, launch hook).
+  function makeCtx(getRuntime, setRuntime, onLaunchOpt) {
     return {
       resolveSubmenu(name) {
         return submenuTable.get(name) || null;
@@ -124,18 +136,39 @@ async function main() {
         renderRuntime(screen, getRuntime());
       },
       runtimeExitKey() { return 'L'; },
+      onLaunch: onLaunchOpt,
     };
   }
 
-  const car3Ctx = makeCtx('car3', car3MenuState, () => car3Runtime, (rt) => { car3Runtime = rt; });
-  const mcxCtx  = makeCtx('mcx',  mcxMenuState,  () => mcxRuntime,  (rt) => { mcxRuntime = rt; });
+  const car3Ctx = makeCtx(
+    () => car3Runtime,
+    (rt) => { car3Runtime = rt; },
+    onCar3Launch,
+  );
+  const mcxCtx  = makeCtx(
+    () => mcxRuntime,
+    (rt) => { mcxRuntime = rt; },
+    // MCX L-on-root mirrors car3: also launches. The firmware does the same
+    // in begin_all() — car3 sends KEY_L over UART to MCX.
+    onCar3Launch,
+  );
 
-  // 9. Wire keys.
+  // 8. Wire keys.
   onKey('car3', (key, sw) => {
+    if (racing) {
+      // While racing, L returns to the menu (firmware: KEY_L pressed during
+      // run also breaks out via stop conditions). Other keys are ignored.
+      if (key === 'L') stopRace();
+      return;
+    }
     menuOnKey(car3MenuState, key, sw, car3Spec, car3Ctx);
     needsRender.car3 = true;
   });
   onKey('mcx', (key, sw) => {
+    if (racing) {
+      if (key === 'L') stopRace();
+      return;
+    }
     menuOnKey(mcxMenuState, key, sw, mcxSpec, mcxCtx);
     needsRender.mcx = true;
   });
@@ -145,24 +178,111 @@ async function main() {
     injectKey('mcx', key, { sw1, sw2 });
   });
 
-  // 10. Bind virtual buttons + KCA + skip + keyboard.
+  // 9. Bind virtual buttons + KCA + skip + keyboard + RESET.
   bindButtons({
     onSkip(screenId) {
       if (screenId === 'car3') car3Boot.skip();
       else if (screenId === 'mcx') mcxBoot.skip();
     },
+    onReset(screenId) {
+      // car3.0 is the only board with a Reset button on the panel (the others
+      // would be peer-reset by car3 over UART in real life). We re-run the
+      // whole boot+wipe pipeline for every screen.
+      hardReset();
+    },
   });
 
-  // 11. Render loop (50ms ≈ 20 fps; plenty for the tiny canvases).
-  const needsRender = { car3: true, mcx: true };
+  // ----- Launch flow -----
+  function onCar3Launch() {
+    if (racing) return;
+    racing = true;
+    // Clean up any open function/runtime page on either screen
+    if (car3Runtime) { disposeRuntime(car3Runtime); car3Runtime = null; }
+    if (mcxRuntime)  { disposeRuntime(mcxRuntime);  mcxRuntime  = null; }
+    car3MenuState.mode = 'menu';
+    mcxMenuState.mode  = 'menu';
+    car3MenuState.flash = null;
+    mcxMenuState.flash  = null;
+
+    // OpenArt enters target_classification (firmware: begin_all path drives
+    // 0x01 via the detection_uart UART)
+    emitOpenartCmd({ cmd: 0x01 });
+
+    // Show race video below the three screens and try to autoplay (browsers
+    // may require user gesture — the L click counts as a gesture, so this
+    // generally works).
+    const strip = document.getElementById('race-strip');
+    const video = document.getElementById('race-video');
+    if (strip) strip.hidden = false;
+    if (video) {
+      video.currentTime = 0;
+      const p = video.play();
+      if (p?.catch) p.catch(() => { /* autoplay blocked; user can click play */ });
+    }
+  }
+
+  function stopRace() {
+    if (!racing) return;
+    racing = false;
+    emitOpenartCmd({ cmd: 0xff });
+    const strip = document.getElementById('race-strip');
+    const video = document.getElementById('race-video');
+    if (video) video.pause();
+    if (strip) strip.hidden = true;
+    needsRender.car3 = true;
+    needsRender.mcx  = true;
+  }
+
+  // ----- Reset flow -----
+  function hardReset() {
+    stopRace();
+    // Skip any boot animation that's still mid-play so the previous Promise
+    // resolves and stops drawing before we kick off a new one on the same
+    // canvas.
+    car3Boot?.skip?.();
+    mcxBoot?.skip?.();
+    State.resetToDefaults();
+    freshMenuStates();
+    // Re-run boot animations on all three screens.
+    car3Boot = makeBootCtx();
+    mcxBoot  = makeBootCtx();
+    const openartBoot = makeBootCtx();
+    Promise.all([
+      bootCar3(car3Screen, car3Boot),
+      bootMcx(mcxScreen, mcxBoot),
+      bootOpenart(openartScreen, openartBoot),
+    ]).then(() => {
+      needsRender.car3 = true;
+      needsRender.mcx  = true;
+    });
+  }
+
+  // 10. Boot sequences (parallel) — show boot animation while ready everything else.
+  let car3Boot = makeBootCtx();
+  let mcxBoot = makeBootCtx();
+  const openartBoot = makeBootCtx();
+  await Promise.all([
+    bootCar3(car3Screen, car3Boot),
+    bootMcx(mcxScreen, mcxBoot),
+    bootOpenart(openartScreen, openartBoot),
+  ]);
+
+  // 11. Race-strip close button (returns to menu — same as L during race).
+  const raceClose = document.querySelector('[data-race-close]');
+  if (raceClose) raceClose.addEventListener('click', () => stopRace());
+
+  // 12. Render loop (50ms ≈ 20 fps; plenty for the tiny canvases).
   setInterval(() => {
+    if (racing) {
+      drawRaceCar3(car3Screen, Date.now());
+      drawRaceMcx(mcxScreen, Date.now());
+      return;
+    }
     menuTick(car3MenuState);
     menuTick(mcxMenuState);
     tickRuntime(car3Runtime);
     tickRuntime(mcxRuntime);
 
-    // Always re-render when in runtime mode (to animate fake data) or when
-    // adjusting (to refresh param value) or when flash is active.
     const car3LiveDraw = car3MenuState.mode === 'runtime' || car3MenuState.mode === 'adjust' || !!car3MenuState.flash;
     const mcxLiveDraw  = mcxMenuState.mode === 'runtime'  || mcxMenuState.mode === 'adjust'  || !!mcxMenuState.flash;
 
@@ -176,7 +296,7 @@ async function main() {
     }
   }, 50);
 
-  // 12. Initial render after boot.
+  // 13. Initial render after boot.
   menuRender(car3Screen, car3MenuState, car3Spec, car3Ctx);
   menuRender(mcxScreen, mcxMenuState, mcxSpec, mcxCtx);
 }

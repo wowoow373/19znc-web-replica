@@ -62,9 +62,13 @@ web-replica/
 │  ├─ boot.js             # boot animations for each controller
 │  ├─ menu_engine.js      # reducers + renderer for the C menu state machine
 │  ├─ runtime_screens.js  # mock pages for "function"-type menu items
+│  ├─ frames.js           # loads real camera frames from assets/sample_frames/
+│  ├─ race.js             # car3/MCX renderers used after 发车 (launch)
 │  └─ openart.js          # OpenArt READY! + CMD-driven classification screen
 ├─ assets/
-│  └─ font_8x16.json      # 95 glyphs × 16 bytes (extracted from firmware)
+│  ├─ font_8x16.json      # 95 glyphs × 16 bytes (extracted from firmware)
+│  ├─ race.mp4            # 480p H.264 transcode of a real competition run
+│  └─ sample_frames/      # 8 BMP→JPG frames from img_yolo/raw/ (real camera)
 ├─ data/
 │  ├─ enums.json          # named enum tables (locate_mode, KCA, ...)
 │  ├─ menu_car3.json      # car3.0 root menu (31 items)
@@ -104,6 +108,30 @@ The dpad buttons can also be driven from the keyboard:
 
 The key is routed to whichever screen contains the currently-focused
 element; click into a screen's panel first to target it.
+
+## 发车 (launch) and RESET
+
+The firmware's main loop is `device_init() → MainMenu_Set() → begin_all() →
+run_TMD()`. `MainMenu_Set` runs the menu loop until `KEY_L` is pressed at
+the root (sets `ExitMark=1`), and `begin_all()` then starts the race. The
+web replica mirrors this:
+
+- Press **L** at the root of car3.0's menu (the title bar says
+  ` :(   Setting    ): `) and the three canvases switch into race mode:
+  car3 shows the camera image + curvature/drift/speed; MCX shows
+  ShowTargetInfo-style lateral-tracking telemetry; OpenArt enters
+  target_classification (CMD `0x01`). The strip below the screens reveals
+  a real race video from the 2024-08-18 run and starts playing.
+- Press **L** again on either screen (or click the **×** on the video
+  strip) to end the race and return to the menu.
+
+The car3.0 panel also has a **RESET** button. Like cycling power on the
+main MCU, it:
+
+1. Wipes the localStorage param store back to defaults.
+2. Replays the 10-line boot animation on car3.0.
+3. Re-clears MCX and re-draws OpenArt's `READY!`.
+4. Resets every screen's menu stack to its root.
 
 ## Regenerating the font
 

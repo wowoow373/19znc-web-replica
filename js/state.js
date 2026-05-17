@@ -63,6 +63,21 @@ export function reload() {
   load();
 }
 
+// Reset every registered param back to its default and clear the persisted
+// store. Mirrors the firmware behaviour after a hardware reset where the
+// volatile state machine starts clean before reading FLASH.
+export function resetToDefaults() {
+  store.params = {};
+  for (const [k, v] of Object.entries(store.defaults)) {
+    store.params[k] = v;
+  }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.warn('state reset failed:', e);
+  }
+}
+
 export function rawDump() {
   return { ...store.params };
 }
