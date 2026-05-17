@@ -10,82 +10,93 @@
 <body>
 <header>
   <h1>19ZNC 三屏复刻</h1>
-  <p class="subtitle">主控 car3.0 · 协控 MCX1.0 · 协控 OpenArt — 一份 UI 回忆</p>
+  <p class="subtitle">主控 car3.0 (操作中心) · 协控 MCX1.0 / OpenArt · 发车视频 hero</p>
 </header>
 
 <main id="root">
-  <!-- ============ car3.0 (160x128) ============ -->
-  <!-- This is the ONLY screen with physical inputs in the real hardware:
-       one d-pad (U/D/L/R/Enter), two slide switches (SW1, SW2), a reset
-       button. MCX is controlled remotely from here via UART forwarding
-       (KCA = deviation/detection); OpenArt has no input at all. -->
-  <section class="screen" data-screen="car3">
-    <h2>car3.0 <span class="meta">160×128 TFT · 物理按键</span></h2>
-    <canvas id="canvas-car3" class="pixel scale-3"></canvas>
-    <div class="panel">
-      <div class="dpad">
-        <button class="dp dp-u" data-screen="car3" data-key="U" title="Up">▲</button>
-        <button class="dp dp-l" data-screen="car3" data-key="L" title="Left / Back / 发车">◀</button>
-        <button class="dp dp-c" data-screen="car3" data-key="Enter" title="Enter (长按 0.5s → KCA=locality)">●</button>
-        <button class="dp dp-r" data-screen="car3" data-key="R" title="Right / Jump-to-end / Save">▶</button>
-        <button class="dp dp-d" data-screen="car3" data-key="D" title="Down">▼</button>
+  <!-- ============ LEFT: Operation Center ============ -->
+  <!-- car3.0 is the ONLY screen with physical inputs (d-pad + SW1/SW2 + RESET).
+       MCX and OpenArt are slaved through UART. So everything that the user
+       physically clicks lives here. -->
+  <aside class="op-column">
+    <section class="screen" data-screen="car3">
+      <h2>car3.0 <span class="meta">160×128 TFT · 物理按键</span></h2>
+      <canvas id="canvas-car3" class="pixel scale-car3"></canvas>
+      <div class="panel">
+        <div class="dpad">
+          <button class="dp dp-u" data-screen="car3" data-key="U" title="Up">▲</button>
+          <button class="dp dp-l" data-screen="car3" data-key="L" title="Left / Back / 发车">◀</button>
+          <button class="dp dp-c" data-screen="car3" data-key="Enter" title="Enter (长按 0.5s → KCA=locality)">●</button>
+          <button class="dp dp-r" data-screen="car3" data-key="R" title="Right / Jump-to-end / Save">▶</button>
+          <button class="dp dp-d" data-screen="car3" data-key="D" title="Down">▼</button>
+        </div>
+        <div class="switches">
+          <label><input type="checkbox" data-sw="car3-SW1"> SW1</label>
+          <label><input type="checkbox" data-sw="car3-SW2"> SW2</label>
+          <span class="step-readout" data-step-readout="car3">step: 0.1</span>
+        </div>
+        <div class="kca-status">
+          <span>KCA:</span>
+          <span class="status-pill" data-kca-status>locality</span>
+        </div>
+        <span class="hint">改 KCA 进 KEY_CHANGE · 长按 Enter 0.5s 拉回 locality</span>
+        <div class="actions">
+          <button class="skip" data-skip="car3">Skip boot</button>
+          <button class="reset" data-reset="car3" title="硬件复位 — 三块屏全部重启，参数恢复默认">RESET</button>
+        </div>
       </div>
-      <div class="switches">
-        <label><input type="checkbox" data-sw="car3-SW1"> SW1</label>
-        <label><input type="checkbox" data-sw="car3-SW2"> SW2</label>
-        <span class="step-readout" data-step-readout="car3">step: 0.1</span>
-      </div>
-      <div class="kca-status">
-        <span>KCA:</span>
-        <span class="status-pill" data-kca-status>locality</span>
-        <span class="hint">改值进 KEY_CHANGE · 长按 Enter 0.5s 拉回 locality</span>
-      </div>
-      <button class="skip" data-skip="car3">Skip boot</button>
-      <button class="reset" data-reset="car3" title="硬件复位 — 三块屏全部重启，参数恢复默认">RESET</button>
-    </div>
-  </section>
+    </section>
+  </aside>
 
-  <!-- ============ MCX1.0 (320x240) ============ -->
-  <!-- No physical keys on real hardware — keys arrive via UART when car3's
-       KCA != locality. So no d-pad / no SW UI here. -->
-  <section class="screen" data-screen="mcx">
-    <h2>MCX1.0 <span class="meta">320×240 IPS · 受 car3.0 UART 控制</span></h2>
-    <canvas id="canvas-mcx" class="pixel scale-2"></canvas>
-    <div class="panel slim">
-      <div class="kca-status">
-        <span class="hint" id="mcx-link-hint">等待 car3.0 转发的按键…</span>
+  <!-- ============ RIGHT: Hero video + MCX / OpenArt =========== -->
+  <section class="display-area">
+    <!-- Hero: race footage as the main canvas; overlay before 发车 -->
+    <div class="hero">
+      <div class="hero-header">
+        <span class="race-label">RACE FOOTAGE · 2024_08_18_19_06_IMG_6891 · 480p · 42s</span>
+        <button class="race-close" data-race-close title="关闭并回到菜单">×</button>
       </div>
-      <button class="skip" data-skip="mcx">Skip boot</button>
+      <div class="hero-stage">
+        <!-- Blurred copy of the video, scaled to cover, fills letterbox bars
+             behind the contained main video. JS keeps the two in sync. -->
+        <video class="bg-blur" id="race-video-bg" muted preload="auto" playsinline aria-hidden="true">
+          <source src="assets/race.mp4" type="video/mp4">
+        </video>
+        <video id="race-video" controls preload="metadata" playsinline>
+          <source src="assets/race.mp4" type="video/mp4">
+          您的浏览器不支持 HTML5 video。
+        </video>
+        <div class="hero-overlay" data-hero-overlay>
+          <div class="hero-overlay-title">◀&ensp;L&nbsp;键启动</div>
+        </div>
+      </div>
     </div>
-  </section>
 
-  <!-- ============ OpenArt (320x240) ============ -->
-  <!-- No inputs at all — OpenArt's mode is driven entirely by UART bytes
-       from car3.0 (yoloTest / classifytest / takingPhotos enter classification
-       modes; otherwise it sits at READY!). -->
-  <section class="screen" data-screen="openart">
-    <h2>OpenArt <span class="meta">320×240 LCD180 · CMD 驱动</span></h2>
-    <canvas id="canvas-openart" class="pixel scale-2"></canvas>
-    <div class="panel slim">
-      <div class="status">
-        <span>当前 mode:</span>
-        <span class="status-pill" data-openart-status>NULL</span>
-      </div>
-      <span class="hint">car3.0 进 yoloTest / classifytest 时会自动切到对应分类模式</span>
+    <!-- Bottom row: MCX + OpenArt (slaved, no physical input) -->
+    <div class="screens-row">
+      <section class="screen" data-screen="mcx">
+        <h2>MCX1.0 <span class="meta">320×240 IPS · 受 car3.0 UART 控制</span></h2>
+        <canvas id="canvas-mcx" class="pixel scale-half"></canvas>
+        <div class="panel slim">
+          <span class="hint" id="mcx-link-hint">等待 car3.0 转发的按键…</span>
+          <button class="skip" data-skip="mcx">Skip boot</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="openart">
+        <h2>OpenArt <span class="meta">320×240 LCD180 · CMD 驱动</span></h2>
+        <canvas id="canvas-openart" class="pixel scale-half"></canvas>
+        <div class="panel slim">
+          <div class="status">
+            <span>当前 mode:</span>
+            <span class="status-pill" data-openart-status>NULL</span>
+          </div>
+          <span class="hint">car3.0 进 yoloTest / classifytest 时自动切类</span>
+        </div>
+      </section>
     </div>
   </section>
 </main>
-
-<section id="race-strip" hidden>
-  <div class="race-strip-header">
-    <span class="race-label">RACE FOOTAGE · 2024_08_18_19_06_IMG_6891 · 480p · 42s</span>
-    <button class="race-close" data-race-close title="关闭并回到菜单">×</button>
-  </div>
-  <video id="race-video" controls preload="metadata" playsinline>
-    <source src="assets/race.mp4" type="video/mp4">
-    您的浏览器不支持 HTML5 video。
-  </video>
-</section>
 
 <footer>
   <small>这是 car3.0 / MCX1.0 / OpenArt 三块屏的 clean-room UI 复刻 · 不含任何竞赛源码</small>

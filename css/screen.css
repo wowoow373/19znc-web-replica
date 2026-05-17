@@ -7,34 +7,46 @@ canvas.pixel {
   background: #fff;
   border: 2px solid #333339;
   border-radius: 4px;
+  align-self: center;
 }
 
-canvas.scale-3 { width: 480px; height: 384px; }   /* 160x128 *3 */
-canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
+/* car3.0: 160×128 native, displayed at 1.5× = 240×192 (pixel-perfect). */
+canvas.scale-car3 { width: 240px; height: 192px; }
 
+/* MCX1.0 / OpenArt: 320×240 native. Display at 1.25× = 400×300, shrinking
+   responsively when the column is narrower. image-rendering keeps the pixels
+   crisp even at non-integer scales. */
+canvas.scale-half {
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 4 / 3;
+  height: auto;
+}
+
+/* ---- Operation panel (car3.0 d-pad + switches + KCA + Skip + RESET) ---- */
 .panel {
-  margin-top: 16px;
-  padding: 14px;
+  margin-top: 10px;
+  padding: 10px 12px;
   background: #232328;
   border: 1px solid #333339;
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-/* MCX / OpenArt panels — read-only, no controls beyond a status line. */
-.panel.slim {
-  padding: 12px 14px;
   gap: 8px;
 }
 
-/* 3x3 dpad: U top center, L center-left, Enter center, R center-right, D bottom center */
+/* MCX / OpenArt panels — read-only, just a status line. */
+.panel.slim {
+  padding: 8px 12px;
+  gap: 6px;
+}
+
+/* 3x3 d-pad: U top center, L center-left, Enter center, R center-right, D bottom center */
 .dpad {
   display: grid;
-  grid-template-columns: 48px 48px 48px;
-  grid-template-rows: 48px 48px 48px;
-  gap: 6px;
+  grid-template-columns: 42px 42px 42px;
+  grid-template-rows: 42px 42px 42px;
+  gap: 5px;
   width: max-content;
   align-self: center;
 }
@@ -44,7 +56,7 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
   color: #d8d8e0;
   border: 1px solid #3a3a42;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   user-select: none;
   transition: background 80ms, transform 60ms;
@@ -59,67 +71,48 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
 .dp-r { grid-column: 3; grid-row: 2; }
 .dp-d { grid-column: 2; grid-row: 3; }
 
-/* SW1 / SW2 toggles and step readout */
+/* SW1 / SW2 toggles + step readout */
 .switches {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
 }
 .switches label {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
   user-select: none;
 }
 .switches input[type=checkbox] {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   accent-color: #6080ff;
 }
 .step-readout {
   margin-left: auto;
   color: #8a8a95;
   font-family: 'Consolas', monospace;
-  font-size: 12px;
+  font-size: 11px;
 }
 
-/* KCA select + hint */
-.kca {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-}
-.kca label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.kca select {
-  background: #2e2e35;
-  color: #d8d8e0;
-  border: 1px solid #3a3a42;
-  border-radius: 4px;
-  padding: 4px 6px;
-  font-size: 13px;
-}
-
-/* KCA status (read-only pill + hint, replaces the old .kca select control) */
+/* KCA status pill row */
 .kca-status {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12px;
 }
 .kca-status > span:first-child { color: #b8b8c0; }
 
 .hint {
   color: #6a6a75;
-  font-size: 12px;
+  font-size: 11px;
   font-style: italic;
+  line-height: 1.4;
 }
 
 /* OpenArt status pill */
@@ -127,7 +120,7 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
 }
 .status-pill {
   background: #2e2e35;
@@ -135,32 +128,36 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
   border-radius: 999px;
   padding: 2px 10px;
   font-family: 'Consolas', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: #ffcc66;
 }
 
-/* Skip-boot link */
+/* Skip-boot + RESET buttons. .actions packs them side-by-side. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .skip {
-  align-self: flex-start;
   background: transparent;
   color: #6a8aff;
   border: 1px solid transparent;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 3px 6px;
+  font-size: 11px;
   cursor: pointer;
   text-decoration: underline;
 }
 .skip:hover { color: #8aa0ff; }
 
-/* RESET button: hardware-reset analogue, sits next to Skip-boot on car3 */
 .reset {
-  align-self: flex-start;
   background: #4a1f24;
   color: #ffb0b0;
   border: 1px solid #883030;
   border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 1px;
   cursor: pointer;
@@ -168,48 +165,3 @@ canvas.scale-2 { width: 640px; height: 480px; }   /* 320x240 *2 */
 }
 .reset:hover { background: #683040; color: #ffd0d0; }
 .reset:active { background: #883050; }
-
-/* Race-video strip: appears below the three screens after 发车. */
-#race-strip {
-  margin: 8px 24px 24px;
-  padding: 16px;
-  background: #1f1f23;
-  border: 1px solid #3a3042;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-#race-strip[hidden] { display: none; }
-
-.race-strip-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.race-label {
-  color: #ffb0b0;
-  font-family: 'Consolas', monospace;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.race-close {
-  background: transparent;
-  color: #c0c0c8;
-  border: 1px solid #3a3a42;
-  border-radius: 4px;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
-  cursor: pointer;
-}
-.race-close:hover { background: #2a2a30; color: #fff; }
-
-#race-video {
-  width: 100%;
-  max-height: 60vh;
-  background: #000;
-  border-radius: 4px;
-}

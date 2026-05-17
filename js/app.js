@@ -259,16 +259,23 @@ async function main() {
     // 0x01 via the detection_uart UART)
     emitOpenartCmd({ cmd: 0x01 });
 
-    // Show race video below the three screens and try to autoplay (browsers
-    // may require user gesture — the L click counts as a gesture, so this
-    // generally works).
-    const strip = document.getElementById('race-strip');
+    // Hide the "L 键启动" overlay covering the hero video, rewind, and try to
+    // autoplay (the L click counts as a user gesture so this generally works).
+    // The bg-blur copy is muted and follows the main video — kept in sync via
+    // event listeners below.
+    const overlay = document.querySelector('[data-hero-overlay]');
     const video = document.getElementById('race-video');
-    if (strip) strip.hidden = false;
+    const videoBg = document.getElementById('race-video-bg');
+    if (overlay) overlay.hidden = true;
     if (video) {
       video.currentTime = 0;
       const p = video.play();
       if (p?.catch) p.catch(() => { /* autoplay blocked; user can click play */ });
+    }
+    if (videoBg) {
+      videoBg.currentTime = 0;
+      const p2 = videoBg.play();
+      if (p2?.catch) p2.catch(() => {});
     }
   }
 
@@ -276,10 +283,12 @@ async function main() {
     if (!racing) return;
     racing = false;
     emitOpenartCmd({ cmd: 0xff });
-    const strip = document.getElementById('race-strip');
+    const overlay = document.querySelector('[data-hero-overlay]');
     const video = document.getElementById('race-video');
+    const videoBg = document.getElementById('race-video-bg');
     if (video) video.pause();
-    if (strip) strip.hidden = true;
+    if (videoBg) videoBg.pause();
+    if (overlay) overlay.hidden = false;
     needsRender.car3 = true;
     needsRender.mcx  = true;
   }
@@ -331,6 +340,29 @@ async function main() {
   // 11. Race-strip close button (returns to menu — same as L during race).
   const raceClose = document.querySelector('[data-race-close]');
   if (raceClose) raceClose.addEventListener('click', () => stopRace());
+
+  // Clicking the "L 键启动" overlay is a shortcut for the L-on-root launch:
+  // we bypass the menu so it works no matter what page car3 is currently on.
+  const heroOverlay = document.querySelector('[data-hero-overlay]');
+  if (heroOverlay) heroOverlay.addEventListener('click', () => onCar3Launch());
+
+  // Keep the blurred bg copy in lock-step with the main video so scrubbing and
+  // pause/play feel correct, even when the user uses native <video> controls.
+  const mainVideo = document.getElementById('race-video');
+  const bgVideo   = document.getElementById('race-video-bg');
+  if (mainVideo && bgVideo) {
+    mainVideo.addEventListener('play',     () => { bgVideo.play().catch(() => {}); });
+    mainVideo.addEventListener('pause',    () => { bgVideo.pause(); });
+    mainVideo.addEventListener('seeking',  () => { bgVideo.currentTime = mainVideo.currentTime; });
+    mainVideo.addEventListener('ratechange', () => { bgVideo.playbackRate = mainVideo.playbackRate; });
+    // Drift correction once per second — the two HTMLMediaElements run on
+    // independent clocks and can drift a few hundred ms over a minute.
+    setInterval(() => {
+      if (mainVideo.paused) return;
+      const drift = bgVideo.currentTime - mainVideo.currentTime;
+      if (Math.abs(drift) > 0.25) bgVideo.currentTime = mainVideo.currentTime;
+    }, 1000);
+  }
 
   // 12. Render loop (50ms ≈ 20 fps; plenty for the tiny canvases).
   setInterval(() => {

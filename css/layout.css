@@ -1,54 +1,193 @@
-/* Page-level layout: dark background, three-column screen grid, plain typography. */
+/* Page-level layout: dark background, op-column + display-area, plain typography.
+   Goal: fit on a 1080p viewport without scrolling. car3.0 on the left as the
+   operation center (only board with physical buttons), race video as the hero
+   canvas on the right, MCX + OpenArt as a slim row beneath it. */
 
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
-  background: #1a1a1f;
+  background: #131318;
   color: #d8d8e0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
 header {
-  padding: 16px 24px;
-  border-bottom: 1px solid #2a2a30;
+  padding: 10px 24px;
+  border-bottom: 1px solid #25252c;
 }
 
 header h1 {
-  margin: 0 0 4px;
-  font-size: 20px;
+  margin: 0 0 2px;
+  font-size: 17px;
   font-weight: 600;
 }
 
 header .subtitle {
   margin: 0;
   color: #8a8a95;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 #root {
   display: grid;
-  grid-template-columns: 480px 640px 640px;
-  gap: 24px;
-  padding: 24px;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 18px;
+  padding: 14px 20px;
   align-items: start;
-  overflow-x: auto;
+  max-width: 1500px;
+  margin: 0 auto;
 }
 
+/* Left: car3.0 + virtual buttons */
+.op-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Right: hero on top, MCX + OpenArt row beneath */
+.display-area {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ============ Hero (race video) ============ */
+.hero {
+  background: #1c1c22;
+  border: 1px solid #2a2a32;
+  border-radius: 10px;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.race-label {
+  color: #c9a86a;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.race-close {
+  background: transparent;
+  color: #888892;
+  border: 1px solid #2e2e36;
+  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 120ms, background 120ms;
+}
+.race-close:hover { background: #26262e; color: #e8d5b7; }
+
+.hero-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  /* Cap height so it never bullies the screens-row off the page on 1080p. */
+  max-height: 45vh;
+  background: #0a0a0e;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+/* Blurred copy of the video, scaled to cover behind the main contained video.
+   Fills the letterbox bars with a soft blurred version of the same frame, the
+   trick most modern video players use to avoid distracting black bars. */
+.bg-blur {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(40px) brightness(0.55) saturate(115%);
+  transform: scale(1.15); /* hide blur-edge artifacts */
+  z-index: 0;
+  pointer-events: none;
+}
+
+#race-video {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent;
+  z-index: 1;
+}
+
+/* Frosted-glass overlay sitting on top of both videos before launch.
+   Uses backdrop-filter so the still-frame underneath shows through as a
+   blurred wash, no flat opaque rectangle. */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(18, 16, 22, 0.32);
+  backdrop-filter: blur(22px) saturate(130%);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  cursor: pointer;
+  text-align: center;
+  padding: 24px;
+  transition: background 200ms;
+}
+.hero-overlay:hover { background: rgba(22, 20, 28, 0.42); }
+.hero-overlay[hidden] { display: none; }
+
+/* Champagne-gold gradient text for an elegant, slightly luxurious feel that
+   reads well against the blurred backdrop. */
+.hero-overlay-title {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: 10px;
+  background: linear-gradient(135deg, #f3e3b6 0%, #d4a85a 45%, #f0d68c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 26px rgba(0, 0, 0, 0.55);
+  user-select: none;
+}
+
+/* ============ Bottom row: MCX + OpenArt ============ */
+.screens-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ---- Shared screen container ---- */
 .screen h2 {
-  margin: 0 0 10px;
-  font-size: 15px;
+  margin: 0 0 6px;
+  font-size: 13px;
   font-weight: 600;
   color: #b8b8c0;
 }
 
 .screen h2 .meta {
-  margin-left: 8px;
+  margin-left: 6px;
   font-weight: 400;
-  font-size: 12px;
+  font-size: 11px;
   color: #6a6a75;
 }
 
@@ -56,29 +195,22 @@ header .subtitle {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-width: 0;
 }
 
 footer {
-  padding: 16px 24px;
-  border-top: 1px solid #2a2a30;
+  padding: 8px 24px 12px;
+  border-top: 1px solid #25252c;
   color: #6a6a75;
+  font-size: 11px;
 }
 
-@media (max-width: 1800px) {
-  #root {
-    grid-template-columns: 480px 640px;
-    grid-template-rows: auto auto;
-  }
-  .screen[data-screen="openart"] {
-    grid-column: 1 / span 2;
-  }
-}
-
-@media (max-width: 1180px) {
+/* Stack into single column on narrow viewports. */
+@media (max-width: 1100px) {
   #root {
     grid-template-columns: 1fr;
   }
-  .screen[data-screen="openart"] {
-    grid-column: auto;
-  }
+  .op-column { max-width: 320px; margin: 0 auto; width: 100%; }
+  .screens-row { grid-template-columns: 1fr; }
+  .hero-stage { max-height: 36vh; }
 }
